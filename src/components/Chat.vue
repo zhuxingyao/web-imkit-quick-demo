@@ -146,7 +146,8 @@ onBeforeUnmount(() => {
 
   <Modal v-model="isModalOpen2TabMessage">
     <div class="modal-content">
-      <div class="modal-content-title">图片详情</div>
+      <div v-if="tapMessageDetail?.type == 'image'" class="modal-content-title">图片详情</div>
+      <div v-if="tapMessageDetail?.type == 'sight'" class="modal-content-title">短视频详情</div>
       <div class="modal-content-body">
         <img v-if="tapMessageDetail?.type == 'image'" width="100%" :src="tapMessageDetail?.url">
         <video v-if="tapMessageDetail?.type == 'sight'" width="100%" controls>
