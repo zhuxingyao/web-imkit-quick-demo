@@ -1,0 +1,195 @@
+@import 'reset';
+@import 'variables';
+
+html,body,#app {
+  width: 100%;
+  height: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+button {
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  color: $white-color;
+  text-align: center;
+  box-sizing: border-box;
+  outline: none;
+  transition: 0.1s;
+  font-weight: 500;
+  user-select: none;
+  vertical-align: middle;
+  border: 1px solid $primary-color;
+  background-color: $primary-color;
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  &:hover,
+  &:focus {
+    color: #ffffff;
+    border-color: $primary-color-2;
+    background-color: $primary-color-2;
+    outline: none;
+  }
+
+  &:active {
+    color: #ffffff;
+    border-color: $primary-color-1;
+    background-color: $primary-color-1;
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid  $primary-color-3;
+    outline-offset: 1px;
+  }
+}
+
+.rong-danger-btn {
+  border: 1px solid $danger-color;
+  background-color: $danger-color;
+  &:hover,
+  &:focus {
+    color: #ffffff;
+    border-color: $danger-color-2;
+    background-color: $danger-color-2;
+  }
+
+  &:active {
+    color: #ffffff;
+    border-color: $danger-color-1;
+    background-color: $danger-color-1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid  $danger-color-3;
+  }
+}
+
+.rong-info-btn {
+  border: 1px solid $info-color;
+  background-color: $info-color;
+  &:hover,
+  &:focus {
+    color: #ffffff;
+    border-color: $info-color-2;
+    background-color: $info-color-2;
+  }
+
+  &:active {
+    color: #ffffff;
+    border-color: $info-color-1;
+    background-color: $info-color-1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid  $info-color-3;
+  }
+}
+
+.rong-login-btn {
+  border: 1px solid #0085d4;
+  background-color: #0085d4;
+  &:hover,
+  &:focus {
+    border-color: #0085d4;
+    background-color: #0085d4;
+  }
+
+  &:active {
+    color: #ffffff;
+    border-color: #0085d4;
+    background-color: #0085d4;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color-3;
+  }
+}
+input {
+  width: 100%;
+  color: #606266;
+  font-size: 14px;
+  height: 32px;
+  line-height: 32px;
+  outline: none;
+  border: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 0 10px;
+  border: 1px solid #dcdfe6;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+
+  &::placeholder {
+    color: #a8abb2;
+  }
+
+  // override edge default style
+  &[type='password']::-ms-reveal {
+    display: none;
+  }
+
+  &[type='number'] {
+    line-height: 1;
+  }
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  border: 1px solid #dcdfe6;
+  padding: 8px 20px 8px 10px;
+  font-size: 14px;
+  width: 100%;
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+
+  &::placeholder {
+    color: $placeholder-text;
+  }
+}
+
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $primary-text;
+  min-width: 1020px;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px
+}
+
+.rong-btn-disable {
+  background-color: #becdd6;
+  border-color: #becdd6;
+  cursor: not-allowed;
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: #becdd6;
+    border-color: #becdd6;
+  }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>messageicon备份 28</title>
+    <defs>
+        <filter id="filter-1">
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.600000 0 0 0 0 0.639216 0 0 0 0 0.709804 0 0 0 1.000000 0"></feColorMatrix>
+        </filter>
+        <filter id="filter-2">
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.549020 0 0 0 0 0.584314 0 0 0 0 0.619608 0 0 0 1.000000 0"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="messageicon备份-3" transform="translate(-22.000000, -105.000000)" filter="url(#filter-1)">
+            <g transform="translate(22.000000, 105.000000)" filter="url(#filter-2)" id="Group-7-Copy">
+                <g transform="translate(3.000000, 3.000000)">
+                    <path d="M15,1.20689655 C18.8608247,1.20689655 22.3606188,2.77683199 24.8953417,5.31155488 C27.4300646,7.84627777 29,11.3460718 29,15.2068966 C29,19.0677213 27.4300646,22.5675153 24.8953417,25.1022382 C22.3606188,27.6369611 18.8608247,29.2068966 15,29.2068966 L15,29.2068966 L4.06701031,29.2068966 L5.38937157,25.3937724 C2.5668174,22.7356398 1,19.0445596 1,15.2068966 C1,11.3460718 2.56993544,7.84627777 5.10465833,5.31155488 C7.63938122,2.77683199 11.1391753,1.20689655 15,1.20689655 Z" id="形状" stroke="#999696" stroke-width="2"></path>
+                    <rect id="矩形" stroke="#979797" stroke-width="1.5" fill="#D8D8D8" x="9.75" y="17.4568966" width="12" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-41" stroke="#979797" stroke-width="1.5" fill="#D8D8D8" x="9.75" y="11.4568966" width="6" height="1" rx="0.5"></rect>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

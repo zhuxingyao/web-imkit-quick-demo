@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>messageicon备份 27</title>
+    <defs>
+        <filter id="filter-1">
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 1.000000 0 0 0 0 0.996799 0 0 0 0 0.996799 0 0 0 1.000000 0"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="联系人" transform="translate(-22.000000, -196.000000)">
+            <g id="artists备份-4" transform="translate(22.000000, 196.000000)" filter="url(#filter-1)">
+                <g transform="translate(2.000000, 6.000000)">
+                    <path d="M24.2755129,25.5921544 L24.2755129,22.6013852 C24.2755129,19.2978727 21.5974869,16.6198468 18.2939744,16.6198468 L6.3308975,16.6198468 C3.02738503,16.6198468 0.349359037,19.2978727 0.349359037,22.6013852 L0.349359037,25.5921544 L24.2755129,25.5921544 Z" id="Shape" stroke="#616A73" stroke-width="2" fill="#616A73" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M26.016019,17.614879 L27.3692308,17.6153846 C28.7794209,17.6153846 30.0640263,18.1597251 31.0083505,19.0496913 C31.9409254,19.9285845 32.5412658,21.1452763 32.595907,22.5036823 L32.595907,22.5036823 L32.6,24.9230769 L27.598,25.445 L27.5985898,22.6013852 C27.5985898,20.8602797 27.0838123,19.2393624 26.1980708,17.882655 L26.016019,17.614879 Z" id="形状结合" stroke="#979797" stroke-width="2" fill="#616A73" fill-rule="nonzero"></path>
+                    <circle id="Oval" stroke="#616A73" stroke-width="2" fill="#616A73" stroke-linecap="round" stroke-linejoin="round" cx="12.3323077" cy="5.98153846" r="5.98153846"></circle>
+                    <path d="M26.1230769,13.2923077 C27.9583616,13.2923077 29.4461538,11.8045155 29.4461538,9.96923077 C29.4461538,8.13394606 27.9583616,6.64615385 26.1230769,6.64615385 C24.2877922,6.64615385 22.8,8.13394606 22.8,9.96923077 C22.8,11.8045155 24.2877922,13.2923077 26.1230769,13.2923077 Z" id="Oval备份" stroke="#616A73" stroke-width="2" fill="#616A73" stroke-linecap="round" stroke-linejoin="round"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
