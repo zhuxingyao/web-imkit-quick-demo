@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import Navbar from './Navbar.vue';
+import Loading from './ui_components/Loading.vue';
+
+import { isShowLoading, loadingMessage } from '../core/context';
 
 </script>
 
@@ -7,22 +10,21 @@ import Navbar from './Navbar.vue';
   <div class="app-layout">
     <Navbar></Navbar>
     <div class="app-layout-conten">
-      <KeepAlive include="Chat">
-        <router-view></router-view>
-      </KeepAlive>
+      <router-view></router-view>
     </div>
+    <Loading v-model="isShowLoading" :message="loadingMessage"></Loading>
   </div>
 </template>
 
 <style scoped lang="scss">
 .app-layout {
   display: flex;
-  flex: 1;
-  overflow: hidden;
-  
+  width: 100%;
+  height: 100%;
   .app-layout-conten {
     flex: 1;
     display: flex;
+    overflow: hidden;
   }
 }
 </style>

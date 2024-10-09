@@ -14,7 +14,7 @@
   >
     <div v-if="modelValue" class="drawer" @click.stop>
       <div class="drawer-header">
-        <button class="rong-danger-btn" @click="closeDrawer">Close Drawer</button>
+        <button class="rong-danger-btn" @click="closeDrawer">Close</button>
       </div>
       <!-- Slot 用于接收外部传入的内容 -->
       <slot></slot>
@@ -65,17 +65,20 @@ const leave = (el, done) => {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .drawer {
   position: fixed;
   top: 0;
   right: 0;
-  width: 300px;
+  width: 400px;
   height: 100%;
   background-color: #fff;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   padding: 20px;
   z-index: 999;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 
   .drawer-header {
     display: flex;

@@ -1,17 +1,18 @@
 import { 
   defineCustomElements, imkit, IUserProfile,
-  Languages, CoreEvent, 
+  Languages, CoreEvent, IGroupMember,
 } from '@rongcloud/imkit';
 import { 
   IInitOption, ConversationType, IReceivedConversation,
-  IConversationOption,
+  IConversationOption, IGroupMemberInfo,
 } from '@rongcloud/imlib-next';
 import service from './service';
 import { validateParam } from '../utils/validator';
 import { 
   currentUserInfo, messageListRef, language,
-  conversationListRef, isModalOpen2conversationMenu,
-  currentConversation, 
+  conversationListRef, getCurrentGroupInfo,
+  selectConversation2Rigte, currentConversation,
+  currentGroupInfo
 } from './context';
 
 /**
@@ -25,21 +26,25 @@ export const initIMKit = async (appkey: string, libOption: IInitOption) => {
     appkey,
     service,
     libOption,
+    customIntercept: {
+      interceptConversation: conversation => {
+        if (!conversation) return true;
+        //  匹配过滤 - 系统会话
+        if (conversation.conversationType === ConversationType.SYSTEM) {
+          return true; // 返回 true 为不展示该会话
+        }
+        // 正常会话 - 不过滤
+        return false;// 返回 false 正常展示
+      },
+      interceptMessage: messages => {
+        return false;
+      },
+    }
   });
 };
 
 /** 更新当前用户信息 */
 export const kitUpdateUserProfile = async (profile: IUserProfile) => {
-  if (
-    !validateParam(profile, { type: 'object' }, true).isValid ||
-    !validateParam(profile.name, { type: 'string', minLength: 1 }, true).isValid ||
-    !validateParam(profile.displayName, { type: 'string', minLength: 1 }, true).isValid ||
-    !validateParam(profile.portraitUri, { type: 'string', minLength: 1 }, false).isValid 
-  ) {
-    console.error('updateUserProfile params error');
-    return 
-  }
-
   imkit.updateUserProfile(profile);
   currentUserInfo.value = { ...currentUserInfo.value, ...profile }
 }
@@ -64,49 +69,33 @@ export const kitSetRecallDuration = (num: number) => {
 
 /** 设置是否隐藏未读消息数 */
 export const kitSetHideNotificUnreadCount = (hide: boolean) => {
-  conversationListRef.value.hideNotificUnreadCount = !!hide
+  conversationListRef.value.hideNotificUnreadCount = !!hide;
 }
 
 /** 自定义会话菜单 - 修改会话信息 */
 export const kitCustomConversationMenu = (isCustom: boolean) => {
   const conversationCustomMenu = [{
     name: (conversation: IReceivedConversation) => {
-      switch (conversation.conversationType) {
-        case ConversationType.GROUP:
-          return '修改群信息'
-        case ConversationType.PRIVATE:
-          return '修改用户信息'
-        case ConversationType.SYSTEM:
-          return '修改系统信息'
-        default:
-          return '未知'
-      }
+      return '自定义会话菜单'
     },
     callback: (conversation: IReceivedConversation) => {
-      currentConversation.value = conversation;
-      isModalOpen2conversationMenu.value = true;
+      selectConversation2Rigte.value = conversation;
+      console.log('点击了自定义会话菜单', conversation)
     }
   }]
   conversationListRef.value.customMenu = isCustom ? conversationCustomMenu : []
 }
 
 /** 更新会话信息 */
-export const kitUpdateConversationProfile = (info: { name: string, portraitUri: string }) => {
-  if (!currentConversation.value) return
-  if (
-    !validateParam(info.name, { type: 'string', minLength: 1 }, true).isValid ||
-    !validateParam(info.portraitUri, { type: 'string', minLength: 1 }, true).isValid
-  ) return
-  const conversation = {
-    conversationType: currentConversation.value.conversationType,
-    targetId: currentConversation.value.targetId,
-  }
+export const kitUpdateConversationProfile = (
+  info: { name: string, portraitUri: string, memberCount?: number },
+  conversation: IConversationOption,
+) => {
   imkit.updateConversationProfile(conversation, {
     ...conversation,
     ...info
   });
   imkit.emit(CoreEvent.CONVERSATION, true);
-  isModalOpen2conversationMenu.value = false
 }
 
 /** 选中会话 */
@@ -118,5 +107,54 @@ export const kitSelectConversation = (conv: IConversationOption) => {
     console.error('kitSelectConversation 参数错误');
     return;
   }
+  currentConversation.value = conv;
+  if (conv.conversationType === ConversationType.GROUP) {
+    getCurrentGroupInfo(conv);
+  }
   imkit.selectConversation(conv);
+}
+
+/** 移除会话 */
+export const kitRemoveConversation = (conv: IConversationOption) => {
+  console.log('移除会话', conv);
+  if (
+    !validateParam(conv.targetId, { type: 'string', minLength: 1 }, true).isValid ||
+    !validateParam(conv.conversationType, { type: 'number' }, true).isValid
+  ) {
+    console.error('kitRemoveConversation 参数错误');
+    return;
+  }
+  if (
+    conv.targetId == currentConversation.value?.targetId 
+    && conv.conversationType == currentConversation.value?.conversationType
+  ) {
+    currentConversation.value = undefined;
+  }
+
+  imkit.removeConversation(conv);
+}
+
+/** 更新群成员信息 & 同时更新会话 memberCount 信息 */
+export const kitUpdateGroupMembers = (
+  groupId: string, 
+  members: IGroupMemberInfo[]
+) => {
+  const conversation = {
+    conversationType: ConversationType.GROUP,
+    targetId: groupId,
+  }
+  const info: IGroupMember[] = members.map(item => ({
+    id: item.userId,
+    name: item.name,
+    portraitUri: item.portraitUri,
+    groupNickname: item.nickname || item.name,
+  }))
+
+  imkit.updateGroupMembers(conversation, info);
+
+  kitUpdateConversationProfile({
+    name: currentGroupInfo.value?.groupName || groupId,
+    portraitUri: currentGroupInfo.value?.portraitUri || '',
+    memberCount: info.length
+  }, conversation)
 }

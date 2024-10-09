@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { Random as R } from "mockjs";
-import { IUserProfile } from '@rongcloud/imkit';
+// import { Random as R } from "mockjs";
 import { kitSelectConversation } from '../core/imkit';
 import { ConversationType } from '@rongcloud/imlib-next';
+import { libAddFriend, libAcceptFriend } from '../core/imlib';
+import { localFriends, localFriendApplications, localCacheGroupInfos } from '../core/context';
+
+import Modal from './ui_components/Modal.vue';
 
 const router = useRouter();
 
 const selected = ref('contacts');
+
+const isModalOpen = ref(false);
 
 const cardList = ref([
   { name: 'contacts', title: '联系人' },
@@ -16,37 +21,11 @@ const cardList = ref([
   { name: 'groups', title: '我的群组' }
 ]);
 
-const getMockList = (data: string) => {
-  const list = [];
-  for (let i = 0; i < 20; i++) {
-    list.push({
-      id: R.id(),
-      name: `${data}_${R.name()}`,
-      portraitUri: R.image('60x60'),
-      displayName: R.name(),
-    })
-  }
-  return list;
-}
-
-const mockList = computed(() => {
-  switch (selected.value) {
-    case 'contacts':
-      return getMockList('contact');
-    case 'new-contacts':
-      return getMockList('new-contacts');
-    case 'groups':
-      return getMockList('group');
-    default:
-      return getMockList('othen');
-  }
-})
-
-function handleContactClick(item: IUserProfile) {
+function handleContactClick(targetId: string) {
   if (selected.value === 'new-contacts') return
   const conversationType = selected.value === 'contacts' ? ConversationType.PRIVATE : ConversationType.GROUP;
   kitSelectConversation({
-    targetId: item.id,
+    targetId,
     conversationType,
   })
   router.push({ name: 'chat'});
@@ -55,6 +34,27 @@ function handleContactClick(item: IUserProfile) {
 function handleChangeNav(item: { name: string, title: string }) {
   selected.value = item.name;
 }
+
+const formData = ref({
+  userId: '',
+  extra: ''
+})
+
+async function handleAddFriend() {
+  const code = await libAddFriend(formData.value.userId, formData.value.extra);
+  if (!code) return;
+  isModalOpen.value = false;
+}
+
+// async function handleAcceptFriend() {
+//   const code = await libAcceptFriend(formData.value.userId);
+//   if (!code) return;
+//   isModalOpen.value = false;
+// }
+
+onMounted(() => {
+  // libGetFriendApplications
+})
 
 </script>
 
@@ -76,19 +76,53 @@ function handleChangeNav(item: { name: string, title: string }) {
           <span v-if="selected === 'groups'">我的群组</span>
         </div>
         <div class="contacts-content-header-extra">
-          <button v-if="selected === 'contacts' || selected === 'new-contacts'">添加联系人</button>
+          <button 
+            v-if="selected === 'contacts' || selected === 'new-contacts'"
+            @click="isModalOpen = true"
+            >添加联系人</button>
         </div>
       </div>
       <div class="contacts-content-body">
-        <div class="list-items">
-          <div class="list-item" v-for="item in mockList" :key="item.id" @click="handleContactClick(item)">
+        <div class="list-items" v-if="selected === 'contacts'">
+          <div class="list-item" v-for="item in localFriends" :key="item.userId" @click="handleContactClick(item.userId)">
             <div class="list-item-avatar">
               <img :src="item.portraitUri" alt="">
             </div>
             <div class="list-item-content">
               <div class="list-item-content-title">
                 <div class="name">{{ item.name }}</div>
-                <button v-if="selected === 'new-contacts'">添加到联系人</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-items" v-if="selected === 'new-contacts'">
+          <div class="list-item" v-for="item in localFriendApplications" :key="item.userId">
+            <div class="list-item-avatar">
+              <img :src="item.portraitUri" alt="">
+            </div>
+            <div class="list-item-content">
+              <div class="list-item-content-title">
+                <div class="name">{{ item.name }}</div>
+                <button
+                  v-if="item.applicationType === 2 && item.applicationStatus === 0"
+                  @click="libAcceptFriend(item.userId)"
+                  >添加到联系人</button>
+                <span v-if="item.applicationType === 1 && item.applicationStatus === 0">已发送好友请求</span>
+                <span v-if="item.applicationStatus === 1">已同意</span>
+                <span v-if="item.applicationStatus === 2">已拒绝</span>
+                <span v-if="item.applicationStatus === 3">已过期</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-items" v-if="selected === 'groups'">
+          <div class="list-item" v-for="item in localCacheGroupInfos" :key="item.groupId" @click="handleContactClick(item.groupId)">
+            <div class="list-item-avatar">
+              <img :src="item.portraitUri" alt="">
+            </div>
+            <div class="list-item-content">
+              <div class="list-item-content-title">
+                <div class="name">{{ item.groupName }}</div>
               </div>
             </div>
           </div>
@@ -96,6 +130,36 @@ function handleChangeNav(item: { name: string, title: string }) {
       </div>
     </div>
   </div>
+  <!-- 弹框 - 播放媒体文件 -->
+  <Modal v-model="isModalOpen">
+    <div class="modal-content">
+      <div class="modal-content-title">
+        添加联系人
+      </div>
+      <div class="modal-content-body">
+        <div class="modal-content-body-item">
+          <div class="modal-content-body-item-title">用户 ID:</div>
+          <div class="modal-content-body-item-content">
+            <input 
+              type="text" 
+              v-model="formData.userId"
+              placeholder="请输入用户 ID">
+          </div>
+        </div>
+        <div class="modal-content-body-item">
+          <div class="modal-content-body-item-title">附加信息:</div>
+          <div class="modal-content-body-item-content">
+            <input type="text" v-model="formData.extra"  placeholder="请输入群名称">
+          </div>
+        </div>
+        <div class="modal-content-body-item">
+          <button @click="handleAddFriend">
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+  </Modal>
 </template>
 
 <style scoped lang="scss">
@@ -194,6 +258,32 @@ function handleChangeNav(item: { name: string, title: string }) {
             }
           }
         }
+      }
+    }
+  }
+}
+
+.modal-content {
+  padding: 10px 20px;
+  font-size: 14px;
+  .modal-content-title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 26px;
+  }
+  .modal-content-body {
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    .modal-content-body-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      .modal-content-body-item-title {
+        width: 80px;
+      }
+      .modal-content-body-item-content {
+        flex: 1;
       }
     }
   }

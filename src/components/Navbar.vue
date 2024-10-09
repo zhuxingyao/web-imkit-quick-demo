@@ -59,7 +59,7 @@ const handleNavClick = (item: { name: string }) => {
     </section>
   </section>
 </div>
-<Modal v-model="showModal" :overlay="false" :top="'35px'" :left="'65px'" transform="translate(0, 0)">
+<Modal v-model="showModal" :overlay="false" :top="'35px'" :left="'65px'" :width="'300px'" transform="translate(0, 0)">
   <div class="user-card">
     <div class="user-card-header">
       <div class="user-card-avatar">

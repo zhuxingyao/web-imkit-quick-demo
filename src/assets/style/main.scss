@@ -177,9 +177,10 @@ select {
   color: $primary-text;
   min-width: 1020px;
   line-height: 1.2;
-  display: flex;
-  flex-direction: column;
-  font-size: 14px
+  // display: flex;
+  // flex-direction: column;
+  font-size: 14px;
+  overflow: hidden;
 }
 
 .rong-btn-disable {
@@ -192,4 +193,8 @@ select {
     background-color: #becdd6;
     border-color: #becdd6;
   }
+}
+.rong-input-disable {
+  background-color: #e9e9eb;
+  cursor: not-allowed;
 }

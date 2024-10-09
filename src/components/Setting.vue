@@ -3,12 +3,13 @@ import { useRouter } from 'vue-router';
 import { ref, onMounted, computed } from 'vue';
 import { IUserProfile, Languages, imkit } from '@rongcloud/imkit';
 import { currentUserInfo, language, languageList } from '../core/context';
-import { kitUpdateUserProfile, kitSetLanguage } from '../core/imkit';
+import { kitSetLanguage } from '../core/imkit';
+import { libUpdateMyUserProfile } from '../core/imlib';
 
 const router = useRouter();
 
 const userInfo = ref<IUserProfile>({
-  id: '',
+  id: currentUserInfo.value.id,
   name: '',
   portraitUri: '',
   displayName: '',
@@ -63,7 +64,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="item">
-            <button :disabled="disabled2UserInfo" :class="{ 'rong-btn-disable': disabled2UserInfo }" @click="kitUpdateUserProfile(userInfo)">修改</button>
+            <button :disabled="disabled2UserInfo" :class="{ 'rong-btn-disable': disabled2UserInfo }" @click="libUpdateMyUserProfile(userInfo)">修改</button>
           </div>
         </div>
       </div>
@@ -111,7 +112,7 @@ onMounted(() => {
     }
   }
   .setting-content {
-    padding: 10px 20px;
+    padding: 10px 200px;
     flex: 1;
     overflow-y: auto;
 

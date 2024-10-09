@@ -52,7 +52,8 @@ const login = async () => {
 <style scoped lang="scss">
 @import "../assets/style/variables.scss";
 .app-login-container {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   display: flex;
   .app-login-left {
     width: 60%;
