@@ -154,7 +154,7 @@ export const registerListener = () => {
       portraitUri: data[0].portraitUri || '',
       userId: e.userId,
       applicationType: e.applicationType,
-      applicationStatus: e.status,
+      applicationStatus: e.applicationStatus,
       operationTime: e.operationTime,
       extra: e.extra
     })
