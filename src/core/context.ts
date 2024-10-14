@@ -11,6 +11,7 @@ import {
   libGetJoinedGroupsByRole
 } from '../core/imlib';
 import { initIMKit, kitUpdateGroupMembers } from '../core/imkit';
+import { getDefaultProfileUri } from '../utils/helper';
 
 export const currentUserInfo = ref<IUserProfile>({
   id: '',
@@ -179,7 +180,9 @@ export const addOrUpdateGroupMembers = (groupId: string, members: IGroupMemberIn
   const memberMap = new Map(currentMembers.map((member: any) => [member.userId, member]));
 
   // 遍历新 members，将其添加到 Map 中（如果 userId 存在，则更新，否则添加）
-  members.forEach((member: any) => {
+  members.forEach((member) => {
+    if (!member.name) member.name = member.userId;
+    if (!member.portraitUri) member.portraitUri = getDefaultProfileUri(member.userId)
     memberMap.set(member.userId, member);
   });
 

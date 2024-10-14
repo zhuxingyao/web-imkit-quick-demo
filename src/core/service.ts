@@ -1,15 +1,13 @@
-import { IConversationOption, IUserProfileInfo, GroupMemberRole } from '@rongcloud/imlib-next';
+import { IConversationOption, GroupMemberRole } from '@rongcloud/imlib-next';
 import { IService, IConversationProfile, IGroupMember } from '@rongcloud/imkit';
-import { Random as R } from "mockjs";
 import { 
   libGetUserProfile, libSubscribeUserStatus, libGetGroupsInfo,
   libGetGroupMembersByRole
 } from './imlib';
 import { 
-  localConversationList, localCacheGroupInfos, localCacheUserInfos,
-  isShowLoading, 
+  localCacheGroupInfos, localCacheUserInfos, 
 } from './context';
-import { isSameConversation } from '../utils/helper';
+import { isSameConversation, getDefaultProfileUri} from '../utils/helper';
 
 
 const service: IService = {
@@ -43,7 +41,7 @@ const service: IService = {
             renderConverdationList.push({
               ...conversation,
               name: localCacheUserInfos.value[index2User]?.name || conversation.targetId,
-              portraitUri: localCacheUserInfos.value[index2User]?.portraitUri || R.image("60x60"),
+              portraitUri: localCacheUserInfos.value[index2User]?.portraitUri || getDefaultProfileUri(conversation.targetId),
               displayName: localCacheUserInfos.value[index2User]?.name || conversation.targetId,
               id: conversation.targetId
             })
@@ -64,7 +62,7 @@ const service: IService = {
             renderConverdationList.push({
               ...conversation,
               name: localCacheGroupInfos.value[index2Group]?.groupName || conversation.targetId,
-              portraitUri: localCacheGroupInfos.value[index2Group]?.portraitUri || R.image("60x60"),
+              portraitUri: localCacheGroupInfos.value[index2Group]?.portraitUri || getDefaultProfileUri(conversation.targetId),
               displayName: localCacheGroupInfos.value[index2Group]?.groupName || conversation.targetId,
               memberCount: localCacheGroupInfos.value[index2Group]?.membersCount || 0,
               id: conversation.targetId
@@ -74,7 +72,7 @@ const service: IService = {
             renderConverdationList.push({
               ...conversation,
               name: conversation.targetId,
-              portraitUri: R.image("60x60"),
+              portraitUri: getDefaultProfileUri(conversation.targetId),
               displayName: conversation.targetId,
               id: conversation.targetId
             })
@@ -97,7 +95,7 @@ const service: IService = {
           conversationType: 1,
           targetId,
           name: result2User[index2User]?.name || targetId,
-          portraitUri: result2User[index2User]?.portraitUri || R.image("60x60"),
+          portraitUri: result2User[index2User]?.portraitUri || getDefaultProfileUri(targetId),
           displayName:result2User[index2User]?.name || targetId,
           id: targetId,
         })
@@ -109,7 +107,7 @@ const service: IService = {
           conversationType: 3,
           targetId,
           name: result2Group[index2Group]?.groupName || targetId,
-          portraitUri: result2Group[index2Group]?.portraitUri || R.image("60x60"),
+          portraitUri: result2Group[index2Group]?.portraitUri || getDefaultProfileUri(targetId),
           displayName: result2Group[index2Group]?.groupName || targetId,
           memberCount: result2Group[index2Group]?.membersCount || 0,
           id: targetId,

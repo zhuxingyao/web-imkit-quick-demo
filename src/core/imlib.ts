@@ -21,18 +21,17 @@ import {
   IFriendInfoChangedSync
 } from '@rongcloud/engine'
 import { IUserProfile, imkit, CoreEvent } from '@rongcloud/imkit';
-import { Random as R } from "mockjs";
 import { 
   kitUpdateUserProfile, kitUpdateConversationProfile, kitSelectConversation,
   kitRemoveConversation,
 } from './imkit';
-import { batchProcessWithRateLimit, delay } from '../utils/helper';
+import { batchProcessWithRateLimit, delay, getDefaultProfileUri } from '../utils/helper';
 import { validateParam } from '../utils/validator';
 import { 
   currentUserInfo, localFriends, localSubscribeUsers,
   localCacheUserInfos, localCacheGroupInfos, isModalOpen2Group,
   isShowLoading, loadingMessage, currentGroupInfo, addOrUpdateGroupMembers,
-  localFriendApplications, getGroupMembers, removeMemberFromGroup, removeGroupMembers
+  localFriendApplications, getGroupMembers, removeMemberFromGroup, removeGroupMembers,
 } from './context';
 
 /**
@@ -76,16 +75,16 @@ export const registerListener = () => {
     console.log('被订阅者状态变更', event);
     event.forEach((item) => {
       // 更新单聊会话信息
-      if (item.subscribeType === SubscribeType.USER_PROFILE && item.userProfile) {
+      if (item.subscribeType === SubscribeType.USER_PROFILE && item.userProfile && item.userProfile.userId) {
         const { name, portraitUri, userId } = item.userProfile;
         const conversation = {
           conversationType: ConversationType.PRIVATE,
-          targetId: userId || 'defaultUserId' // 使用默认值或根据实际情况处理
+          targetId: userId
         };
         const info = {
           ...conversation,
-          name: name || 'defaultName',
-          portraitUri: portraitUri || 'defaultPortraitUri'
+          name: name || userId,
+          portraitUri: portraitUri || getDefaultProfileUri(userId),
         };
         kitUpdateConversationProfile(info, conversation)
       }
@@ -111,7 +110,7 @@ export const registerListener = () => {
     if (index > -1) return
     localFriends.value.push({
       userId: data.userId,
-      portraitUri: data.portraitUri,
+      portraitUri: data.portraitUri || getDefaultProfileUri(data.userId),
       name: data.name,
       remark: '',
       extProfile: {},
@@ -151,7 +150,7 @@ export const registerListener = () => {
     if (code !== ErrorCode.SUCCESS || !data) return console.log('获取用户信息失败');
     localFriendApplications.value.push({
       name: data[0].name || e.userId,
-      portraitUri: data[0].portraitUri || '',
+      portraitUri: data[0].portraitUri || getDefaultProfileUri(e.userId),
       userId: e.userId,
       applicationType: e.applicationType,
       applicationStatus: e.applicationStatus,
@@ -209,8 +208,8 @@ export const registerListener = () => {
       if (index > -1) localCacheGroupInfos.value[index] = data.groupInfo;
       const members = getGroupMembers(data.groupInfo.groupId);
       kitUpdateConversationProfile({
-        name: data.groupInfo.groupName!,
-        portraitUri: data.groupInfo.portraitUri!,
+        name: data.groupInfo.groupName || data.groupInfo.groupId,
+        portraitUri: data.groupInfo.portraitUri || getDefaultProfileUri(data.groupInfo.groupId),
         memberCount: members.length
       }, {
         conversationType: ConversationType.GROUP,
@@ -345,7 +344,7 @@ export const libGetUserProfile = async (userId: string) => {
   const userInfo = {
     id: data?.userId || userId,
     name: data?.name || userId,
-    portraitUri: data?.portraitUri || R.image("60x60"),
+    portraitUri: data?.portraitUri || getDefaultProfileUri(userId),
     displayName: data?.extraProfile?.displayName || data?.name || userId,
   }
   currentUserInfo.value = userInfo;

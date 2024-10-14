@@ -47,3 +47,47 @@ export const hasGroupOperationPermission = (role?: GroupMemberRole, permission?:
 
 /** 延时 */
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/** 生成随机颜色 */
+export function getRandomHexColor(): string {
+  const randomColor = Math.floor(Math.random() * 0xFFFFFF); // 生成一个随机的数字
+  const hexColor = `#${randomColor.toString(16).padStart(6, '0')}`; // 转换为十六进制，且不足六位时补0
+  return hexColor;
+}
+
+/** 获取默认头像 */
+export function getDefaultProfileUri(userId: string) {
+  const size = 60;
+  const color = getRandomHexColor();
+  // 创建一个 canvas 元素
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext('2d');
+  if (!context) return '';
+
+  // 绘制背景色
+  context.fillStyle = color;
+  context.fillRect(0, 0, size, size);
+
+  // 根据 userID 生成的字符，通常使用 userID 的首字母
+  const text = userId.charAt(0).toUpperCase();
+
+  // 设置字体大小和样式，适应 canvas 尺寸
+  const fontSize = size / 2;
+  context.font = `${fontSize}px Arial`;
+  context.fillStyle = '#ffffff'; // 字体颜色
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.shadowColor = '#000000';
+  context.shadowBlur = 2;
+  context.shadowOffsetX = 1;
+  context.shadowOffsetY = 1;
+
+  // 在 canvas 中心绘制文本
+  context.fillText(text, size / 2, size / 2);
+
+  // 返回 base64 格式的图片 URL
+  return canvas.toDataURL('image/png');
+}

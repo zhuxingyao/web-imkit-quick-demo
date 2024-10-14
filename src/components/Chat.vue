@@ -148,14 +148,6 @@ onBeforeUnmount(() => {
           @click="handeleOpenModal2Group(ModalGroupType.GroupInfo)"
           >更新群组</button>
         <button class="chat-wrapper-right-menu-item"
-          v-if="currentGroupInfo && hasGroupOperationPermission(currentGroupInfo.role, currentGroupInfo.groupInfoEditPermission)"
-          @click="libDismissGroup(currentGroupInfo)"
-          >解散群组</button>
-        <button class="chat-wrapper-right-menu-item"
-          v-if="currentGroupInfo && currentGroupInfo.role !== GroupMemberRole.OWNER"
-          @click="libQuitGroup(currentGroupInfo)"
-          >退出群组</button>
-        <button class="chat-wrapper-right-menu-item"
           v-if="currentConversation.conversationType == 3 
             && currentGroupInfo" 
           @click="isDrawerOpen2GroupMembers = true"
@@ -302,10 +294,18 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="drawer-footer">
-        <button
+        <button class="drawer-footer-button"
           v-if="currentGroupInfo && hasGroupOperationPermission(currentGroupInfo.role, currentGroupInfo.groupInfoEditPermission)"
           @click="handeleOpenModal2Group(ModalGroupType.InviteUsers)"
           >邀请入群</button>
+        <button class="drawer-footer-button"
+          v-if="currentGroupInfo && hasGroupOperationPermission(currentGroupInfo.role, currentGroupInfo.groupInfoEditPermission)"
+          @click="libDismissGroup(currentGroupInfo)"
+          >解散群组</button>
+        <button class="drawer-footer-button"
+          v-if="currentGroupInfo && currentGroupInfo.role !== GroupMemberRole.OWNER"
+          @click="libQuitGroup(currentGroupInfo)"
+          >退出群组</button>
       </div>
     </div>
   </Drawer>
@@ -407,6 +407,7 @@ onBeforeUnmount(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   .drawer-content-title {
     font-size: 16px;
     font-weight: 500;
@@ -462,10 +463,12 @@ onBeforeUnmount(() => {
     }
   }
   .drawer-footer {
-    padding: 10px 5px;
+    padding: 0 5px;
     display: flex;
     justify-content: flex-end;
-
+    .drawer-footer-button {
+      margin-left: 10px;
+    }
   }
 }
 </style>

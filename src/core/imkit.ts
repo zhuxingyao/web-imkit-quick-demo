@@ -14,6 +14,7 @@ import {
   selectConversation2Rigte, currentConversation,
   currentGroupInfo
 } from './context';
+import { getDefaultProfileUri } from '../utils/helper';
 
 /**
  * 初始化 IMKit
@@ -45,6 +46,9 @@ export const initIMKit = async (appkey: string, libOption: IInitOption) => {
 
 /** 更新当前用户信息 */
 export const kitUpdateUserProfile = async (profile: IUserProfile) => {
+  if (!profile.portraitUri) {
+    profile.portraitUri = getDefaultProfileUri(profile.id)
+  }
   imkit.updateUserProfile(profile);
   currentUserInfo.value = { ...currentUserInfo.value, ...profile }
 }

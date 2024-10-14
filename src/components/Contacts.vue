@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-// import { Random as R } from "mockjs";
 import { kitSelectConversation } from '../core/imkit';
 import { ConversationType } from '@rongcloud/imlib-next';
 import { libAddFriend, libAcceptFriend } from '../core/imlib';
