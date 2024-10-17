@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import { kitSelectConversation } from '../core/imkit';
 import { ConversationType } from '@rongcloud/imlib-next';
 import { libAddFriend, libAcceptFriend } from '../core/imlib';
-import { localFriends, localFriendApplications, localCacheGroupInfos } from '../core/context';
+import { friendsMap, friendApplicationsMap, groupInfoMap, getUser } from '../core/context';
 
 import Modal from './ui_components/Modal.vue';
 
@@ -83,25 +83,25 @@ onMounted(() => {
       </div>
       <div class="contacts-content-body">
         <div class="list-items" v-if="selected === 'contacts'">
-          <div class="list-item" v-for="item in localFriends" :key="item.userId" @click="handleContactClick(item.userId)">
+          <div class="list-item" v-for="([userId]) in friendsMap" :key="`F_${userId}`" @click="handleContactClick(userId)">
             <div class="list-item-avatar">
-              <img :src="item.portraitUri" alt="">
+              <img :src="getUser(userId).portraitUri" alt="">
             </div>
             <div class="list-item-content">
               <div class="list-item-content-title">
-                <div class="name">{{ item.name }}</div>
+                <div class="name">{{ getUser(userId).name }}</div>
               </div>
             </div>
           </div>
         </div>
         <div class="list-items" v-if="selected === 'new-contacts'">
-          <div class="list-item" v-for="item in localFriendApplications" :key="item.userId">
+          <div class="list-item" v-for="([userId, item]) in friendApplicationsMap" :key="`FA_${userId}`">
             <div class="list-item-avatar">
-              <img :src="item.portraitUri" alt="">
+              <img :src="getUser(userId).portraitUri" alt="">
             </div>
             <div class="list-item-content">
               <div class="list-item-content-title">
-                <div class="name">{{ item.name }}</div>
+                <div class="name">{{ getUser(userId).name }}</div>
                 <button
                   v-if="item.applicationType === 2 && item.applicationStatus === 0"
                   @click="libAcceptFriend(item.userId)"
@@ -115,13 +115,13 @@ onMounted(() => {
           </div>
         </div>
         <div class="list-items" v-if="selected === 'groups'">
-          <div class="list-item" v-for="item in localCacheGroupInfos" :key="item.groupId" @click="handleContactClick(item.groupId)">
+          <div class="list-item" v-for="([groupId, groupInfo]) in groupInfoMap" :key="groupId" @click="handleContactClick(groupId)">
             <div class="list-item-avatar">
-              <img :src="item.portraitUri" alt="">
+              <img :src="groupInfo.portraitUri" alt="">
             </div>
             <div class="list-item-content">
               <div class="list-item-content-title">
-                <div class="name">{{ item.groupName }}</div>
+                <div class="name">{{ groupInfo.groupName }}</div>
               </div>
             </div>
           </div>

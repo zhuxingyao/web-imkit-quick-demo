@@ -1,8 +1,8 @@
 import { ref } from 'vue';
 import { 
   IInitOption, ErrorCode, getConnectionStatus, RCConnectionStatus,
-  IReceivedConversation, LogL, IFriendInfo, IConversationOption, IUserProfileInfo,
-  IGroupInfo, IGroupMemberInfo, IFriendApplicationInfo, GroupMemberRole
+  IReceivedConversation, LogL, IConversationOption,
+  IGroupInfo, GroupMemberRole
 } from '@rongcloud/imlib-next';
 import { IUserProfile, Languages, imkit, CoreEvent } from '@rongcloud/imkit';
 import { 
@@ -10,8 +10,14 @@ import {
   registerListener, libGetAllFriends, libGetFriendApplications,
   libGetJoinedGroupsByRole
 } from '../core/imlib';
-import { initIMKit, kitUpdateGroupMembers } from '../core/imkit';
-import { getDefaultProfileUri } from '../utils/helper';
+import { initIMKit } from '../core/imkit';
+import { FriendManager } from './FriendManager';
+import { GroupManager } from './GroupManager';
+import { UserManager } from './UserManager';
+
+export const _userManager = new UserManager();
+export const _friendManager = new FriendManager(_userManager);
+export const _groupManager = new GroupManager(_userManager);
 
 export const currentUserInfo = ref<IUserProfile>({
   id: '',
@@ -60,10 +66,10 @@ export const currentGroupInfo = ref<IGroupInfo>({
   introduction: '',
 })
 export const getCurrentGroupInfo = (conv: IConversationOption) => {
-  const index2Group = localCacheGroupInfos.value.findIndex((item) => item.groupId === conv.targetId);
-  if (index2Group === -1) return
-  currentGroupInfo.value = {...localCacheGroupInfos.value[index2Group]};
-  return localCacheGroupInfos.value[index2Group]
+  const group = _groupManager.getGroup(conv.targetId);
+  if (!group) return
+  currentGroupInfo.value = { ...group };
+  return group
 }
 
 /** 存储当前播放的音频实例的全局变量 */
@@ -143,9 +149,15 @@ export const appLogin = async () => {
   const { code } = await libConnect(token.value);
   if (code === ErrorCode.SUCCESS) {
     imkit.emit(CoreEvent.CONVERSATION, true);
-    localFriends.value = await libGetAllFriends();
-    localFriendApplications.value = await libGetFriendApplications();
-    localCacheGroupInfos.value = await libGetJoinedGroupsByRole(GroupMemberRole.UNDEF);
+
+    const friendsResult = await libGetAllFriends();
+    _friendManager.addOrUpdateFriend(friendsResult);
+
+    const friendApplicationsResult = await libGetFriendApplications();
+    _friendManager.addOrUpdateFriendApplication(friendApplicationsResult);
+
+    const groupsResult = await await libGetJoinedGroupsByRole(GroupMemberRole.UNDEF);
+    _groupManager.addOrUpdateGroup(groupsResult);
     // imkit.emit(CoreEvent.CONVERSATION, true);
   }
   isShowLoading.value = false;
@@ -156,64 +168,32 @@ export const appDestroy = async () => {
   await libDisConnect();
 };
 
-export const localFriends = ref<IFriendInfo[]>([]);
-
-export const localFriendApplications = ref<IFriendApplicationInfo[]>([]);
-
-export const localSubscribeUsers = ref<string[]>([]);
-
-export const localConversationList = ref<IConversationOption[]>([]);
-
-export const localCacheUserInfos = ref<IUserProfileInfo[]>([]);
-
-export const localCacheGroupInfos = ref<IGroupInfo[]>([]);
-
-/** 本地缓存的群成员数据 - 定义群的成员映射，键为群组 ID，值为成员数组 */
-export const localCacheGroupMembers = ref<Map<string, IGroupMemberInfo[]>>(new Map());
-
-/** 添加或更新群成员 */
-export const addOrUpdateGroupMembers = (groupId: string, members: IGroupMemberInfo[]) => {
-  // 获取当前群组的成员
-  const currentMembers = localCacheGroupMembers.value.get(groupId) || [];
-
-  // 创建一个 Map 以 userId 作为 key，先将 currentMembers 放入 Map 中
-  const memberMap = new Map(currentMembers.map((member: any) => [member.userId, member]));
-
-  // 遍历新 members，将其添加到 Map 中（如果 userId 存在，则更新，否则添加）
-  members.forEach((member) => {
-    if (!member.name) member.name = member.userId;
-    if (!member.portraitUri) member.portraitUri = getDefaultProfileUri(member.userId)
-    memberMap.set(member.userId, member);
-  });
-
-  // 将更新后的成员列表存入缓存
-  localCacheGroupMembers.value.set(groupId, Array.from(memberMap.values()));
-  
-  console.log('addOrUpdateGroupMembers ===>', Array.from(memberMap.values()));
-  kitUpdateGroupMembers(groupId, Array.from(memberMap.values()))
-};
+/**
+ * 好友列表
+ */
+export const friendsMap = _friendManager.friendsMap;
+/**
+ * 好友申请列表
+ */
+export const friendApplicationsMap = _friendManager.friendApplicationsMap;
+/**
+ * 群列表
+ */
+export const groupInfoMap = _groupManager.groupInfoMap;
+/**
+ * 群成员列表
+ */
+export const groupMemberMap = _groupManager.groupMemberMap;
 
 /** 获取群成员 */
 export const getGroupMembers = (groupId: string) => {
-  return localCacheGroupMembers.value.get(groupId) || [];
+  return _groupManager.getGroupMembers(groupId);
 };
 
-/** 删除群成员 */
-export const removeMemberFromGroup = (groupId: string, userId: string): void => {
-  const members = localCacheGroupMembers.value.get(groupId);
-  if (members) {
-    const updatedMembers = members.filter(member => member.userId !== userId);
-    localCacheGroupMembers.value.set(groupId, updatedMembers);
-    kitUpdateGroupMembers(groupId, updatedMembers)
-  }
-};
+export const getUser = (userId: string) => {
+  return _userManager.getUser(userId);
+}
 
-/** 删除指定群组的缓存数据 */
-export const removeGroupMembers = (groupId: string) => {
-  if (localCacheGroupMembers.value.has(groupId)) {
-    localCacheGroupMembers.value.delete(groupId);
-    console.log(`已删除群组 ${groupId} 及其成员数据`);
-  } else {
-    console.log(`群组 ${groupId} 不存在`);
-  }
-};
+export const getGroup = (groupId: string) => {
+  return _groupManager.getGroup(groupId);
+}

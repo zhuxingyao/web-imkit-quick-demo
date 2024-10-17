@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   ErrorCode, GroupMemberRole
@@ -9,7 +9,8 @@ import {
   playAudio, downloadFile,
   currentConversation, isModalOpen2Group,
   getCurrentGroupInfo, currentGroupInfo,
-  getGroupMembers, currentUserInfo,
+  currentUserInfo, getUser,
+  groupMemberMap
 } from '../core/context';
 import { 
   kitSetRecallDuration, kitSetHideNotificUnreadCount,
@@ -48,6 +49,10 @@ enum ModalGroupType {
   InviteUsers = 'Privates',
 }
 const modal2GroupType = ref<ModalGroupType>(ModalGroupType.GroupInfo);
+
+const groupMembers = computed(() => {
+  return groupMemberMap.value.get(currentGroupInfo.value?.groupId || '');
+})
 
 const handeleOpenModal2Group = (type: ModalGroupType) => {
   isModalOpen2Group.value = true;
@@ -275,12 +280,12 @@ onBeforeUnmount(() => {
     <div class="drawer-content">
       <div class="drawer-content-title">群成员列表</div>
       <div class="drawer-content-body">
-        <div class="drawer-content-body-item" v-for="(item, index) in getGroupMembers(currentGroupInfo.groupId)" :key="index">
+        <div class="drawer-content-body-item" v-for="(item, index) in groupMembers" :key="index">
           <div class="item-avatar">
-            <img :src="item.portraitUri" alt="">
+            <img :src="getUser(item.userId).portraitUri" alt="">
           </div>
           <div class="item-info">
-            <div class="item-info-name">{{ item.name }}</div>
+            <div class="item-info-name">{{ getUser(item.userId).name }}</div>
             <div class="item-info-role" v-if="item.role === 1">{{item.userId === currentUserInfo.id ? '自己 - 群成员':'群成员'}}</div>
             <div class="item-info-role" v-if="item.role === 2">{{item.userId === currentUserInfo.id ? '自己 - 管理员':'管理员'}}</div>
             <div class="item-info-role" v-if="item.role === 3">{{item.userId === currentUserInfo.id ? '自己 - 群主':'群主'}}</div>

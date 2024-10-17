@@ -2,18 +2,16 @@ import {
   init, IInitOption, connect, disconnect,
   Events, ConversationType, SubscribeType,
   ISubscribeUserStatusInfo, IUserProfileInfo,
-  addEventListener, getCurrentUserId,
-  subscribeUserStatus, getUserProfiles,
-  ErrorCode, IAsyncRes, getMyUserProfile,
+  addEventListener, getCurrentUserId, getUserProfiles,
+  ErrorCode, getMyUserProfile,
   updateMyUserProfile, getFriends, QueryFriendsDirectionType,
-  IFriendInfo, unSubscribeUserStatus,
-  IGroupOperationInfo, IGroupInfoChanged, IGroupMemberInfoChanged,
+  IFriendInfo, IGroupOperationInfo, IGroupInfoChanged, IGroupMemberInfoChanged,
   IGroupApplicationInfo, IGroupRemarkChangedSync, IGroupFollowsChangedSync,
   getGroupsInfo, IGroupInfo, createGroup, updateGroupInfo,
   IConversationOption, GroupMemberRole, dismissGroup, GroupOperation, quitGroup,
   inviteUsersToGroup, getGroupMembersByRole, IGroupMemberInfo, getFriendApplications,
   IFriendApplicationInfo, DirectionType, addFriend, acceptFriendApplication, deleteFriends,
-  checkFriends, FriendRelationType, getJoinedGroupsByRole, kickGroupMembers
+  checkFriends, FriendRelationType, getJoinedGroupsByRole, kickGroupMembers, getFriendsInfo
 } from '@rongcloud/imlib-next';
 // todo: 后续重新导出接口定义
 import {
@@ -25,13 +23,14 @@ import {
   kitUpdateUserProfile, kitUpdateConversationProfile, kitSelectConversation,
   kitRemoveConversation,
 } from './imkit';
-import { batchProcessWithRateLimit, delay, getDefaultProfileUri } from '../utils/helper';
+import { delay, getDefaultProfileUri } from '../utils/helper';
 import { validateParam } from '../utils/validator';
 import { 
-  currentUserInfo, localFriends, localSubscribeUsers,
-  localCacheUserInfos, localCacheGroupInfos, isModalOpen2Group,
-  isShowLoading, loadingMessage, currentGroupInfo, addOrUpdateGroupMembers,
-  localFriendApplications, getGroupMembers, removeMemberFromGroup, removeGroupMembers,
+  currentUserInfo, isModalOpen2Group,
+  isShowLoading, loadingMessage, currentGroupInfo,
+  getGroupMembers,
+  _friendManager, _groupManager,
+  _userManager
 } from './context';
 
 /**
@@ -58,9 +57,7 @@ async function handleRemoveGroup(groupId: string) {
     targetId: groupId
   });
   // 移除本地该群组缓存信息
-  const index = localCacheGroupInfos.value.findIndex(item => item.groupId === groupId);
-  if (index > -1) localCacheGroupInfos.value.splice(index, 1);
-  removeGroupMembers(groupId)
+  _groupManager.deleteGroup(groupId);
 };
 
 /** 注册用户信息托管监听 */
@@ -75,8 +72,13 @@ export const registerListener = () => {
     console.log('被订阅者状态变更', event);
     event.forEach((item) => {
       // 更新单聊会话信息
-      if (item.subscribeType === SubscribeType.USER_PROFILE && item.userProfile && item.userProfile.userId) {
+      if (item.subscribeType === SubscribeType.FRIEND_USER_PROFILE && item.userProfile && item.userProfile.userId) {
         const { name, portraitUri, userId } = item.userProfile;
+        _userManager.addOrUpdateUser({
+          userId,
+          name,
+          portraitUri
+        })
         const conversation = {
           conversationType: ConversationType.PRIVATE,
           targetId: userId
@@ -94,42 +96,45 @@ export const registerListener = () => {
    * 用户资料变更。
    * 在其他端修改用户资料后会受到此通知，用于执行后续的业务操作。
    */
-  addEventListener(Events.OWN_USER_PROFILE_CHANGED, (event: IUserProfileInfo) => {
+  addEventListener(Events.OWN_USER_PROFILE_CHANGED, async (event: IUserProfileInfo) => {
     console.log('用户资料变更', event)
     const { name, portraitUri, userId, extraProfile } = event;
     // 如果用户 id 与当前用户 id 相同，则更新当前用户的资料 
     if (userId === getCurrentUserId() && name && portraitUri) {
+      _userManager.addOrUpdateUser({ userId, name, portraitUri })
       kitUpdateUserProfile({ id: userId, name, portraitUri, displayName: extraProfile?.displayName || name })
     }
   })
 
   // 添加好友
-  addEventListener(Events.FRIEND_ADDED, (data: IFriendAdd) => {
+  addEventListener(Events.FRIEND_ADDED, async (data: IFriendAdd) => {
     console.info('添加好友回调', data);
-    const index = localFriends.value.findIndex(item => item.userId === data.userId);
-    if (index > -1) return
-    localFriends.value.push({
-      userId: data.userId,
-      portraitUri: data.portraitUri || getDefaultProfileUri(data.userId),
-      name: data.name,
-      remark: '',
-      extProfile: {},
-      addTime: data.operationTime,
-      directionType: data.directionType,
-      inBlackList: false
-    });
-
-    const index2 = localFriendApplications.value.findIndex(item => item.userId === data.userId);
-    if (index2 > -1) localFriendApplications.value[index2].applicationStatus = 1;
+    const friend = _friendManager.getFriend(data.userId)
+    if (!friend) {
+      const friendInfo: IFriendInfo = {
+        userId: data.userId,
+        portraitUri: data.portraitUri,
+        name: data.name,
+        remark: '',
+        extProfile: {},
+        addTime: data.operationTime,
+        directionType: data.directionType,
+        inBlackList: false
+      }
+      _friendManager.addOrUpdateFriend([friendInfo])
+      const friendApplication = _friendManager.getFriendApplication(data.userId);
+      if (!friendApplication) return;
+      friendApplication.applicationStatus = 1;
+    }
   });
   // 删除好友
   addEventListener(Events.FRIEND_DELETE, (data: IFriendDelete) => {
     console.info('删除好友回调', data);
     data.userIds.forEach(userId => {
-      const index = localFriends.value.findIndex(item => item.userId === userId);
-      if (index > -1) localFriends.value.splice(index, 1);
-      const index2 = localFriendApplications.value.findIndex(item => item.userId === userId);
-      if (index2 > -1) localFriendApplications.value.splice(index2, 1);
+      const friend = _friendManager.getFriend(userId)
+      if (friend) _friendManager.deleteFriend(userId)
+      const friendApplication = _friendManager.getFriendApplication(userId);
+      if (friendApplication) _friendManager.deleteFriendApplication(userId);
 
       kitRemoveConversation({
         conversationType: ConversationType.PRIVATE,
@@ -148,15 +153,16 @@ export const registerListener = () => {
     // TODO: 好友信息数据没有 name 和 portraitUri，多端情况下如果同步好友请求信息, 该种情况需要再主动获取用户信息
     const { code, data} = await getUserProfiles([e.userId]);
     if (code !== ErrorCode.SUCCESS || !data) return console.log('获取用户信息失败');
-    localFriendApplications.value.push({
+    const friendApplications = {
       name: data[0].name || e.userId,
-      portraitUri: data[0].portraitUri || getDefaultProfileUri(e.userId),
+      portraitUri: data[0].portraitUri || '',
       userId: e.userId,
       applicationType: e.applicationType,
       applicationStatus: e.applicationStatus,
       operationTime: e.operationTime,
       extra: e.extra
-    })
+    }
+    _friendManager.addOrUpdateFriendApplication([friendApplications])
   });
   // 【多端同步】好友信息回调
   addEventListener(Events.FRIEND_INFO_CHANGED_SYNC, (data: IFriendInfoChangedSync) => {
@@ -178,20 +184,19 @@ export const registerListener = () => {
           return
         }
         // 移除该群组的成员
-        removeMemberFromGroup(data.groupId, item.userId)
+        _groupManager.deleteGroupMember(data.groupId, item.userId)
       })
     }
     // 处理入群 - 将用户信息添加到本地缓存中
     if(data.operation === GroupOperation.JOIN && data.memberInfos) {
-      const index = localCacheGroupInfos.value.findIndex(item => item.groupId === data.groupId);
+      const group = _groupManager.getGroup(data.groupId);
       // 如果没有该群组信息，则先拉取群组信息和群成员信息缓存到本地
-      if (index < 0) {
+      if (!group) {
         await libGetGroupsInfo([data.groupId]);
         await libGetGroupMembersByRole(data.groupId, GroupMemberRole.UNDEF);
         return
       }
-      // data.memberInfos.push(data.operatorInfo!)
-      addOrUpdateGroupMembers(data.groupId, data.memberInfos);
+      _groupManager.addOrUpdateGroupMember(data.groupId, data.memberInfos);
     }
 
     if (data.operation === GroupOperation.CREATE && data.groupInfo) {
@@ -204,8 +209,8 @@ export const registerListener = () => {
     console.info('群组资料变更通知', data);
     if (data.groupInfo) {
       // 更新群组信息
-      const index = localCacheGroupInfos.value.findIndex(item => item.groupId === data.groupInfo.groupId);
-      if (index > -1) localCacheGroupInfos.value[index] = data.groupInfo;
+      let group = _groupManager.getGroup(data.groupInfo.groupId);
+      if (group) group = data.groupInfo;
       const members = getGroupMembers(data.groupInfo.groupId);
       kitUpdateConversationProfile({
         name: data.groupInfo.groupName || data.groupInfo.groupId,
@@ -234,107 +239,18 @@ export const registerListener = () => {
   addEventListener(Events.GROUP_FOLLOWS_CHANGED_SYNC, (data: IGroupFollowsChangedSync) => {
     console.info('群成员特别关注变更多端回调事件', data);
   });
-
 }
-
-/** 处理订阅用户逻辑 - 超过 1000 人时，取消订阅部分用户 */
-export const libSubscription = async (
-  usersToSubscribe: string[], expiry: number,
-  BATCH_SIZE: number = 200,
-  MAX_SUBSCRIBE_USERS: number = 1000
-) => {
-  // 递归分批订阅
-  const processSubscription = async (batchUsers: string[]) => {
-    if (batchUsers.length === 0) return;
-
-    const currentBatch = batchUsers.slice(0, BATCH_SIZE); // 当前批次的用户
-    const remainingUsers = batchUsers.slice(BATCH_SIZE); // 剩余待处理的用户
-
-    // 检查当前订阅人数是否超过最大人数
-    if (localSubscribeUsers.value.length + currentBatch.length > MAX_SUBSCRIBE_USERS) {
-      const excessCount = (localSubscribeUsers.value.length + currentBatch.length) - MAX_SUBSCRIBE_USERS;
-      // 取消订阅多余的用户
-      const usersToUnsubscribe = localSubscribeUsers.value.slice(0, excessCount);
-      const { code } = await unSubscribeUserStatus(usersToUnsubscribe, SubscribeType.USER_PROFILE);
-      if (code == ErrorCode.SUCCESS) {
-        // 从本地已订阅用户列表中移除这些用户
-        localSubscribeUsers.value = localSubscribeUsers.value.slice(excessCount);
-      } else {
-        console.log(`取消订阅失败, code: ${code}, users: ${usersToUnsubscribe}`);
-      }
-    }
-
-    // 进行当前批次的订阅
-    const { code } = await subscribeUserStatus(currentBatch, SubscribeType.USER_PROFILE, expiry);
-    if (code !== ErrorCode.SUCCESS) {
-      console.log(`订阅失败, code: ${code}, users: ${currentBatch}`);
-      return
-    }
-    localSubscribeUsers.value = [...localSubscribeUsers.value, ...currentBatch];
-
-    // 递归处理剩余用户
-    await processSubscription(remainingUsers);
-  };
-
-  await processSubscription(usersToSubscribe);
-}
-
-/** 
- * 订阅用户信息 & 获取用户信息
- * */
-export const libSubscribeUserStatus = async (userIds: string[]):Promise<IUserProfileInfo[]> => {
-  if (!userIds || userIds.length === 0) return []
-  const expiry = 180000; // 订阅有效期
-  // todo: 后续修改正式订阅数
-  const maxSubscriptionBatchSize = 200; // 订阅最大用户数
-  const maxSubscribedUsers = 1000; // 订阅的用户上限
-
-  const maxProfileBatchSize = 20; // 获取用户资料最大用户数
-  const maxCallsPerSecond = 50; // 信令调用频次
-  console.log('开始订阅用户信息 ==>', userIds);
-  await libSubscription(userIds, expiry, maxSubscriptionBatchSize, maxSubscribedUsers)
-
-  // 分批获取用户资料
-  const getUserProfilesBatch = async (batch: string[]) => {
-    return await getUserProfiles(batch);
-  };
-
-  // 限速分批获取用户资料
-  const result =  await batchProcessWithRateLimit<IAsyncRes<IUserProfileInfo[]>>(userIds, maxProfileBatchSize, getUserProfilesBatch, maxCallsPerSecond);
-  const data: IUserProfileInfo[] = [];
-  result.forEach(item => {
-    if (item.code !== ErrorCode.SUCCESS || !item.data) return
-    data.push(...item.data);
-  });
-  localCacheUserInfos.value = [...localCacheUserInfos.value, ...data]
-  console.log('订阅用户信息结果 ==>', data)
-  return data;
-};
 
 /**
  * 批量获取群信息
  * @param groupIds 
  * @returns 
  */
-export const libGetGroupsInfo = async (groupIds: string[]): Promise<IGroupInfo[]> => {
+export const libGetGroupsInfo = async (groupIds: string[]) => {
   if (!groupIds || groupIds.length === 0) return []
-  const maxProfileBatchSize = 20; // 获取用户资料最大用户数
-  const maxCallsPerSecond = 50; // 信令调用频次
-  console.log('开始批量获取群信息 ==>', groupIds);
-  // 分批获取群组资料
-  const getGetGroupsInfoBatch = async (batch: string[]) => {
-    return await getGroupsInfo(batch);
-  };
-
-  // 限速分批获取群组资料
-  const result =  await batchProcessWithRateLimit<IAsyncRes<IGroupInfo[]>>(groupIds, maxProfileBatchSize, getGetGroupsInfoBatch, maxCallsPerSecond);
-  const data: IGroupInfo[] = [];
-  result.forEach(item => {
-    if (item.code !== ErrorCode.SUCCESS || !item.data) return
-    data.push(...item.data);
-  });
-  console.log('批量获取群信息结果 ==>', data)
-  localCacheGroupInfos.value = [...localCacheGroupInfos.value, ...data]
+  const { code, data } = await getGroupsInfo(groupIds);
+  if (code !== ErrorCode.SUCCESS || !data) return []
+  _groupManager.addOrUpdateGroup(data);
   return data;
 };
 
@@ -427,6 +343,14 @@ export async function libGetAllFriends() {
   return allFriendsList;
 }
 
+/** 批量获取好友信息 */
+export async function libGetFriendsInfo(userIds: string[]) {
+  const { code, data } = await getFriendsInfo(userIds);
+  if (code !== ErrorCode.SUCCESS || !data) return [];
+  _friendManager.addOrUpdateFriend(data);
+  return data;
+}
+
 /** 
  * 获取所有好友请求列表
  * 使用递归方式 - 增加频率限制
@@ -503,7 +427,7 @@ export const libCreateOrUpdateGroup = async (groupInfo: IGroupInfo, currentConve
   if (code !== ErrorCode.SUCCESS || !data || data.processCode !== ErrorCode.SUCCESS) return alert(`创建群组失败, code: ${code}&${data?.processCode}`);
   currentGroupInfo.value = { ...groupInfo }
   // 更新本地缓存 - 防止触发监听请求远端
-  localCacheGroupInfos.value.push({ ...groupInfo, membersCount: 2, role: GroupMemberRole.OWNER });
+  _groupManager.addOrUpdateGroup([{ ...groupInfo, membersCount: 2, role: GroupMemberRole.OWNER }]);
   kitSelectConversation({
     conversationType: ConversationType.GROUP,
     targetId: groupInfo.groupId
@@ -515,18 +439,17 @@ export const libCreateOrUpdateGroup = async (groupInfo: IGroupInfo, currentConve
 /**
  * 解散群组
  * @param groupInfo 群组信息
+ * 操作成功触发群组回调，在回调中处理 UI 变更
  */
 export const libDismissGroup = async (groupInfo: IGroupInfo) => {
   if (!groupInfo) return;
   const { code } = await dismissGroup(groupInfo.groupId);
   if (code !== ErrorCode.SUCCESS) return;
-  // 由监听回调处理
-  // kitRemoveConversation({
-  //   conversationType: ConversationType.GROUP,
-  //   targetId: groupInfo.groupId
-  // });
 }
-/** 退出群组 */
+/** 
+ * 退出群组 
+ * 操作成功触发群组回调，在回调中处理 UI 变更
+ * */
 export const libQuitGroup = async (groupInfo: IGroupInfo) => {
   if (!groupInfo) return;
   const { code } = await quitGroup(groupInfo.groupId);
@@ -615,7 +538,7 @@ export const libGetGroupMembersByRole = async (groupId: string, role: GroupMembe
 
   // 开始递归调用
   await fetchAllGroupMembersByRole();
-  addOrUpdateGroupMembers(groupId, allGroupMemberInfo);
+  _groupManager.addOrUpdateGroupMember(groupId, allGroupMemberInfo);
   return allGroupMemberInfo;
 }
 
@@ -638,8 +561,6 @@ export const libAddFriend = async (userId: string, extra: string) => {
 export const libAcceptFriend = async (userId: string) => {
   const { code} = await acceptFriendApplication(userId);
   if (code !== ErrorCode.SUCCESS) return;
-  const index = localFriendApplications.value.findIndex(item => item.userId === userId);
-  console.log('index ====>', index)
 }
 
 /** 删除好友 */
