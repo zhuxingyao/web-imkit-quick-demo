@@ -13,7 +13,6 @@ import {
   IFriendApplicationInfo, DirectionType, addFriend, acceptFriendApplication, deleteFriends,
   checkFriends, FriendRelationType, getJoinedGroupsByRole, kickGroupMembers, getFriendsInfo
 } from '@rongcloud/imlib-next';
-// todo: 后续重新导出接口定义
 import {
   IFriendAdd, IFriendDelete, IFriendApplicationStatusChange,
   IFriendInfoChangedSync
@@ -100,6 +99,7 @@ export const registerListener = () => {
     console.log('用户资料变更', event)
     const { name, portraitUri, userId, extraProfile } = event;
     // 如果用户 id 与当前用户 id 相同，则更新当前用户的资料 
+
     if (userId === getCurrentUserId() && name && portraitUri) {
       _userManager.addOrUpdateUser({ userId, name, portraitUri })
       kitUpdateUserProfile({ id: userId, name, portraitUri, displayName: extraProfile?.displayName || name })
@@ -109,7 +109,7 @@ export const registerListener = () => {
   // 添加好友
   addEventListener(Events.FRIEND_ADDED, async (data: IFriendAdd) => {
     console.info('添加好友回调', data);
-    const friend = _friendManager.getFriend(data.userId)
+    const friend = _friendManager.getFriend(data.userId);
     if (!friend) {
       const friendInfo: IFriendInfo = {
         userId: data.userId,
@@ -127,6 +127,7 @@ export const registerListener = () => {
       friendApplication.applicationStatus = 1;
     }
   });
+
   // 删除好友
   addEventListener(Events.FRIEND_DELETE, (data: IFriendDelete) => {
     console.info('删除好友回调', data);
@@ -135,7 +136,6 @@ export const registerListener = () => {
       if (friend) _friendManager.deleteFriend(userId)
       const friendApplication = _friendManager.getFriendApplication(userId);
       if (friendApplication) _friendManager.deleteFriendApplication(userId);
-
       kitRemoveConversation({
         conversationType: ConversationType.PRIVATE,
         targetId: userId
@@ -150,7 +150,6 @@ export const registerListener = () => {
   // 好友申请
   addEventListener(Events.FRIEND_APPLICATION_STATUS_CHANGED, async (e: IFriendApplicationStatusChange) => {
     console.info('好友申请回调', e);
-    // TODO: 好友信息数据没有 name 和 portraitUri，多端情况下如果同步好友请求信息, 该种情况需要再主动获取用户信息
     const { code, data} = await getUserProfiles([e.userId]);
     if (code !== ErrorCode.SUCCESS || !data) return console.log('获取用户信息失败');
     const friendApplications = {
@@ -322,7 +321,6 @@ export async function libGetAllFriends() {
       await delay(1000); // 如果超过50次调用，等待1秒
       callCount = 0;     // 重置调用次数
     }
-    console.log('fetchFriends params ==>', directionType, option);
     const { code, data } = await getFriends(directionType, option);
     if (code !== ErrorCode.SUCCESS || !data) return allFriendsList;
 
@@ -338,8 +336,6 @@ export async function libGetAllFriends() {
 
   // 开始递归调用
   await fetchFriends();
-
-  console.log('获取所有好友列表 ==>', allFriendsList);
   return allFriendsList;
 }
 
@@ -372,7 +368,6 @@ export async function libGetFriendApplications() {
       await delay(1000); // 如果超过50次调用，等待1秒
       callCount = 0;     // 重置调用次数
     }
-    console.log('fetchFriendApplications params ==>', option);
     const { code, data } = await getFriendApplications(option);
     if (code !== ErrorCode.SUCCESS || !data) return allFriendApplications;
 
@@ -388,7 +383,6 @@ export async function libGetFriendApplications() {
 
   // 开始递归调用
   await fetchFriendApplications();
-  console.log('获取好友请求列表结果 ==>', allFriendApplications)
   return allFriendApplications;
 }
 
@@ -408,7 +402,6 @@ export const libCreateOrUpdateGroup = async (groupInfo: IGroupInfo, currentConve
   loadingMessage.value = '正在更新群信息';
   if (currentConversation.conversationType === ConversationType.GROUP) {
     const { code } = await updateGroupInfo(groupInfo);
-    console.log('updateGroupInfo code ====>', code, groupInfo);
     isShowLoading.value = false;
     if (code !== ErrorCode.SUCCESS) return;
     currentGroupInfo.value = { ...groupInfo }
@@ -501,7 +494,6 @@ export const libGetJoinedGroupsByRole = async (role: GroupMemberRole) => {
 
   // 开始递归调用
   await fetchGetJoinedGroupsByRole();
-  console.log('getJoinedGroupsByRole ====>', allGroupInfo);
   return allGroupInfo;
 }
 
@@ -523,7 +515,6 @@ export const libGetGroupMembersByRole = async (groupId: string, role: GroupMembe
     }
 
     const { code, data } = await getGroupMembersByRole(groupId, role, option);
-    console.log('fetchAllGroupMembersByRole ====>', code);
     if (code !== ErrorCode.SUCCESS || !data) return allGroupMemberInfo;
 
     allGroupMemberInfo = allGroupMemberInfo.concat(data.data);

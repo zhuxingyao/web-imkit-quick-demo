@@ -120,7 +120,6 @@ export const kitSelectConversation = (conv: IConversationOption) => {
 
 /** 移除会话 */
 export const kitRemoveConversation = (conv: IConversationOption) => {
-  console.log('移除会话', conv);
   if (
     !validateParam(conv.targetId, { type: 'string', minLength: 1 }, true).isValid ||
     !validateParam(conv.conversationType, { type: 'number' }, true).isValid

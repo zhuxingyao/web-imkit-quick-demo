@@ -66,7 +66,6 @@ const tapMessageDetail = ref<{
 }>();
 /** 消息（图片、文件、小视频、富文本、高质量语音）点击事件 */
 const handeleTapMessage = (e: any) => {
-  console.log('消息点击事件', e);
   tapMessageDetail.value = e.detail;
   if (e.detail.type === 'image' || e.detail.type === 'sight') {
     isModalOpen2TabMessage.value = true;
@@ -83,7 +82,6 @@ const handeleTapMessage = (e: any) => {
  * 会话点击事件
  */
 const handleTapConversation = (e: any) => {
-  console.log('会话点击事件', e);
   // 获取会话信息
   currentConversation.value = e.detail;
   if (e.detail.conversationType === 3) {
