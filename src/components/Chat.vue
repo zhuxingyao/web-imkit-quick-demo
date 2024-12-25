@@ -53,7 +53,9 @@ const handeleTapMessage = (e: any) => {
 onMounted(async () => {
   const { code } = await appLogin();
   if (code !== ErrorCode.SUCCESS) {
+    alert(`登入失败 ->, 错误码：${code}`)
     router.push({name: 'login'});
+    return
   }
   messageListRef.value.addEventListener('tapMessage', handeleTapMessage);
 })
@@ -128,13 +130,13 @@ onBeforeUnmount(() => {
         <div class="modal-content-body-item">
           <div class="modal-content-body-item-title">名称:</div>
           <div class="modal-content-body-item-content">
-            <input v-model="updateConversationProfile.name" type="text" placeholder="请输入群名称">
+            <input v-model="updateConversationProfile.name" type="text" placeholder="请输入名称">
           </div>
         </div>
         <div class="modal-content-body-item">
           <div class="modal-content-body-item-title">头像:</div>
           <div class="modal-content-body-item-content">
-            <input v-model="updateConversationProfile.portraitUri" type="text" placeholder="请输入群名称">
+            <input v-model="updateConversationProfile.portraitUri" type="text" placeholder="请输入头像地址">
           </div>
         </div>
         <div class="modal-content-body-item">

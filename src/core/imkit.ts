@@ -96,7 +96,7 @@ export const kitUpdateConversationProfile = (info: { name: string, portraitUri: 
   if (
     !validateParam(info.name, { type: 'string', minLength: 1 }, true).isValid ||
     !validateParam(info.portraitUri, { type: 'string', minLength: 1 }, true).isValid
-  ) return
+  ) return alert('请输入正确值')
   const conversation = {
     conversationType: currentConversation.value.conversationType,
     targetId: currentConversation.value.targetId,

@@ -52,12 +52,6 @@ onMounted(() => {
               <input type="text" v-model="userInfo.name">
             </div>
             <div class="content" style="margin-left: 50px;">
-              <div class="label">别名:</div>
-              <input type="text" v-model="userInfo.displayName">
-            </div>
-          </div>
-          <div class="item">
-            <div class="content">
               <div class="label">头像:</div>
               <input type="text" v-model="userInfo.portraitUri">
             </div>
@@ -111,7 +105,7 @@ onMounted(() => {
     }
   }
   .setting-content {
-    padding: 10px 20px;
+    padding: 10px 200px;
     flex: 1;
     overflow-y: auto;
 

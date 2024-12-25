@@ -34,7 +34,7 @@ const mockList = computed(() => {
     case 'contacts':
       return getMockList('contact');
     case 'new-contacts':
-      return getMockList('new-contacts');
+      return [];
     case 'groups':
       return getMockList('group');
     default:
@@ -74,6 +74,7 @@ function handleChangeNav(item: { name: string, title: string }) {
           <span v-if="selected === 'contacts'">联系人</span>
           <span v-if="selected === 'new-contacts'">新的联系人</span>
           <span v-if="selected === 'groups'">我的群组</span>
+          (随机生成的测试数据)
         </div>
         <div class="contacts-content-header-extra">
           <button v-if="selected === 'contacts' || selected === 'new-contacts'">添加联系人</button>

@@ -14,7 +14,7 @@
   >
     <div v-if="modelValue" class="drawer" @click.stop>
       <div class="drawer-header">
-        <button class="rong-danger-btn" @click="closeDrawer">Close Drawer</button>
+        <button class="rong-danger-btn" @click="closeDrawer">Close</button>
       </div>
       <!-- Slot 用于接收外部传入的内容 -->
       <slot></slot>
