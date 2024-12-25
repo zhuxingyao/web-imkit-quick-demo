@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@rongcloud/engine": "^5.10.4",
+    "@rongcloud/engine": "^5.12.1",
     "@rongcloud/imkit": "^5.6.7-alpha.1",
-    "@rongcloud/imlib-next": "^5.10.4",
+    "@rongcloud/imlib-next": "^5.12.1",
     "mockjs": "^1.1.0",
     "vue": "^3.4.37",
     "vue-router": "^4.4.5"

@@ -31,12 +31,12 @@ export const loadingMessage = ref<string>('');
 
 // 初始化配置
 export const initOption = ref<IInitOption>({
-  appkey: 'c9kqb3rdkbb8j',
+  appkey: '',
   logOutputLevel: LogL.ERROR,
 });
 
 // 登录 token
-export const token = ref<string>('HRicV3z8FasYMHBjVVpWsP817NEgrSGo@mwga.rongcloud.net');
+export const token = ref<string>('');
 
 /** imkit 消息组件 */
 export const messageListRef = ref<any>();
@@ -74,6 +74,7 @@ export const getCurrentGroupInfo = (conv: IConversationOption) => {
 
 /** 存储当前播放的音频实例的全局变量 */
 let currentAudio: HTMLAudioElement | null = null;
+
 /**
  *  播放音频
  * @param url 音频地址

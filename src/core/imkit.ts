@@ -37,6 +37,7 @@ export const initIMKit = async (appkey: string, libOption: IInitOption) => {
         // 正常会话 - 不过滤
         return false;// 返回 false 正常展示
       },
+      //@ts-ignore
       interceptMessage: messages => {
         return false;
       },
@@ -79,6 +80,7 @@ export const kitSetHideNotificUnreadCount = (hide: boolean) => {
 /** 自定义会话菜单 - 修改会话信息 */
 export const kitCustomConversationMenu = (isCustom: boolean) => {
   const conversationCustomMenu = [{
+    //@ts-ignore
     name: (conversation: IReceivedConversation) => {
       return '自定义会话菜单'
     },
