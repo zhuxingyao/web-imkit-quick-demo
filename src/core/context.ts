@@ -17,7 +17,7 @@ export const currentUserInfo = ref<IUserProfile>({
 // 初始化配置
 export const initOption = ref<IInitOption>({
   appkey: '',
-  logOutputLevel: LogL.INFO,
+  logOutputLevel: LogL.WARN,
 });
 
 // 登录 token

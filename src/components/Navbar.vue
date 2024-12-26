@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import Modal from './ui_components/Modal.vue';
+import Modal from './common/Modal.vue';
 import { libDisConnect } from '../core/imlib';
 import { currentUserInfo } from '../core/context';
 

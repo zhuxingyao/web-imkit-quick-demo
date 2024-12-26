@@ -11,8 +11,8 @@ import {
   kitCustomConversationMenu, kitUpdateConversationProfile
 } from '../core/imkit';
 
-import Drawer from './ui_components/Drawer.vue';
-import Modal from './ui_components/Modal.vue';
+import Drawer from './common/Drawer.vue';
+import Modal from './common/Modal.vue';
 
 const router = useRouter();
 
