@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { getConnectionStatus } from '@rongcloud/imlib-next';
 
 const routes = [
   {
